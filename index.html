@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenPayd Bank - Banque Crypto & Fiat En Ligne</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.17.0/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --primary-gradient: linear-gradient(135deg, #e11d48 0%, #7c3aed 100%);
+      --accent-purple: #7c3aed;
+      --accent-red: #e11d48;
+      --border-color: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; padding: 20px; }
+    .app-container { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 20px; }
+    header { background: #ffffff; padding: 15px 25px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 42px; height: 42px; background: var(--primary-gradient); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
+    .brand-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+    .brand-title span { color: var(--accent-purple); }
+    .brand-subtitle { font-size: 12px; color: var(--text-muted); }
+    .header-controls { display: flex; align-items: center; gap: 12px; }
+    .btn-toggle { background: #f1f5f9; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text-main); }
+    .btn-toggle.active { background: var(--accent-purple); color: white; border-color: var(--accent-purple); }
+    .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: #f1f5f9; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .banner { background: var(--primary-gradient); border-radius: 24px; padding: 30px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(124, 58, 237, 0.25); }
+    .banner-title { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; margin-bottom: 8px; }
+    .total-amount { font-size: 42px; font-weight: 800; margin-bottom: 12px; }
+    .rate-badge { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; }
+    .quick-actions { display: flex; gap: 12px; }
+    .action-card { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; padding: 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; color: white; min-width: 80px; }
+    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; }
+    .accounts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .account-card { background: var(--card-bg); border-radius: 20px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 2px solid transparent; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .currency-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; color: white; }
+    .eur-icon { background: #2563eb; } .usd-icon { background: #059669; } .btc-icon { background: #f59e0b; }
+    .currency-tag { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; }
+    .eur-tag { background: #eff6ff; color: #2563eb; } .usd-tag { background: #ecfdf5; color: #059669; } .btc-tag { background: #fef3c7; color: #d97706; }
+    .card-label { font-size: 16px; font-weight: 700; margin-top: 10px; }
+    .card-sublabel { font-size: 12px; color: var(--text-muted); }
+    .balance-label { font-size: 12px; color: var(--text-muted); margin-top: 15px; }
+    .balance-value { font-size: 26px; font-weight: 800; margin-top: 4px; }
+    .btn-add-account { margin-top: 15px; width: 100%; background: #fff1f2; color: var(--accent-red); border: 1px dashed var(--accent-red); padding: 10px; border-radius: 12px; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-box { background: white; border-radius: 24px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 20px; font-weight: 700; }
+    .close-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 14px; outline: none; }
+    .btn-submit { width: 100%; background: var(--primary-gradient); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
+    .option-card { border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .bank-details-box { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">O</div>
+        <div>
+          <div class="brand-title">OpenPayd <span>Bank</span></div>
+          <div class="brand-subtitle">Banque Crypto & Fiat En Ligne</div>
+        </div>
+      </div>
+      <div class="header-controls">
+        <button class="btn-toggle active" id="btn-lang-fr" onclick="setLang('FR')">🌐 FR</button>
+        <button class="btn-toggle" id="btn-lang-en" onclick="setLang('EN')">EN</button>
+        <button class="btn-toggle active" id="btn-curr-eur" onclick="setCurrency('EUR')">EUR</button>
+        <button class="btn-toggle" id="btn-curr-usd" onclick="setCurrency('USD')">USD</button>
+        <button class="icon-btn" onclick="openModal('modal-settings')">⚙️</button>
+      </div>
+    </header>
+
+    <div class="banner">
+      <div>
+        <div class="banner-title">🛡️ SOLDE TOTAL ESTIMÉ</div>
+        <div class="total-amount" id="total-balance-display">€0.00</div>
+        <div class="rate-badge">
+          <span style="width:8px; height:8px; background:#10b981; border-radius:50%;"></span>
+          <span id="btc-rate-info">Compte BNB • Syncing...</span>
+        </div>
+      </div>
+      <div class="quick-actions">
+        <div class="action-card" onclick="openModal('modal-send')"><span>↗️</span><span>Envoyer</span></div>
+        <div class="action-card" onclick="openModal('modal-receive')"><span>↙️</span><span>Recevoir</span></div>
+        <div class="action-card" onclick="openModal('modal-swap')"><span>🔄</span><span>Swap</span></div>
+        <div class="action-card" onclick="openModal('modal-deposit')"><span>➕</span><span>Déposer</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">Comptes Fiat & Crypto</div>
+      <div class="accounts-grid">
+        <div class="account-card" style="border-color: var(--accent-red);">
+          <div>
+            <div class="card-header"><div class="currency-icon eur-icon">€</div><span class="currency-tag eur-tag">EUR</span></div>
+            <div class="card-label">Compte Euro (EUR)</div>
+            <div class="card-sublabel">SEPA Direct</div>
+          </div>
+          <div>
+            <div class="balance-label">Solde disponible</div>
+            <div class="balance-value">€0.00</div>
+            <div id="eur-account-info"></div>
+            <button class="btn-add-account" onclick="openRegisterBankModal('EUR')">⊕ Ajouter un compte en EUR</button>
+          </div>
+        </div>
+
+        <div class="account-card">
+          <div>
+            <div class="card-header"><div class="currency-icon usd-icon">$</div><span class="currency-tag usd-tag">USD</span></div>
+            <div class="card-label">Compte Dollar (USD)</div>
+            <div class="card-sublabel">ACH / Wire</div>
+          </div>
+          <div>
+            <div class="balance-label">Solde disponible</div>
+            <div class="balance-value">$0.00</div>
+            <div id="usd-account-info"></div>
+            <button class="btn-add-account" onclick="openRegisterBankModal('USD')">⊕ Ajouter un compte en USD</button>
+          </div>
+        </div>
+
+        <div class="account-card">
+          <div>
+            <div class="card-header"><div class="currency-icon btc-icon">₿</div><span class="currency-tag btc-tag">BNB</span></div>
+            <div class="card-label">Compte BTC (Réseau BNB)</div>
+            <div class="card-sublabel">0xa00f...eFcc</div>
+          </div>
+          <div>
+            <div class="balance-label">Solde BTC Transféré</div>
+            <div class="balance-value" id="btc-balance-val">1.0000 BTC</div>
+            <div style="font-size: 13px; color: var(--accent-purple); font-weight: 600; margin-top: 4px;" id="btc-fiat-val">Valeur : €0.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales -->
+  <div class="modal-overlay" id="modal-register-bank">
+    <div class="modal-box">
+      <div class="modal-header"><div class="modal-title" id="reg-bank-title">Ajouter un compte</div><button class="close-btn" onclick="closeModal('modal-register-bank')">✕</button></div>
+      <form onsubmit="handleSaveBank(event)">
+        <input type="hidden" id="reg-currency" value="EUR">
+        <div class="form-group"><label>Nom</label><input type="text" id="reg-nom" required></div>
+        <div class="form-group"><label>Prénom</label><input type="text" id="reg-prenom" required></div>
+        <div class="form-group"><label>Nom de la banque</label><input type="text" id="reg-bank-name" required></div>
+        <div class="form-group"><label>IBAN</label><input type="text" id="reg-iban" required></div>
+        <div class="form-group"><label>BIC / SWIFT</label><input type="text" id="reg-bic" required></div>
+        <button type="submit" class="btn-submit">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-send">
+    <div class="modal-box">
+      <div class="modal-header"><div class="modal-title">Envoyer des fonds</div><button class="close-btn" onclick="closeModal('modal-send')">✕</button></div>
+      <div id="send-step-1">
+        <div class="option-card" onclick="handleSendToMyBank()">
+          <div><div style="font-weight: 700;">Vers mon compte bancaire</div><div style="font-size: 12px; color: var(--text-muted);">Accéder aux coordonnées enregistrées</div></div>
+          <div>›</div>
+        </div>
+        <div class="option-card" onclick="handleSendToExternalBank()">
+          <div><div style="font-weight: 700;">Vers un compte externe</div><div style="font-size: 12px; color: var(--text-muted);">Saisir un autre IBAN bancaire</div></div>
+          <div>›</div>
+        </div>
+      </div>
+      <div id="send-step-external" style="display: none;">
+        <form onsubmit="handleExecuteSend(event)">
+          <div class="form-group"><label>Nom</label><input type="text" required></div>
+          <div class="form-group"><label>Prénom</label><input type="text" required></div>
+          <div class="form-group"><label>Nom de la banque</label><input type="text" required></div>
+          <div class="form-group"><label>IBAN</label><input type="text" required></div>
+          <div class="form-group"><label>BIC / SWIFT</label><input type="text" required></div>
+          <div class="form-group"><label>Montant</label><input type="number" step="0.01" required></div>
+          <button type="submit" class="btn-submit">Confirmer l'envoi</button>
+          <button type="button" class="btn-submit" style="background: #e2e8f0; color: var(--text-main);" onclick="resetSendModal()">Retour</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-receive">
+    <div class="modal-box">
+      <div class="modal-header"><div class="modal-title">Recevoir des fonds</div><button class="close-btn" onclick="closeModal('modal-receive')">✕</button></div>
+      <div style="text-align: center;">
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Votre adresse BNB Smart Chain</div>
+        <div style="background: #f1f5f9; padding: 12px; border-radius: 12px; font-family: monospace; font-size: 13px; word-break: break-all; margin-bottom: 15px;">0xa00fAeA51136De3091504AcCD522D0177261eFcc</div>
+        <button class="btn-submit" onclick="navigator.clipboard.writeText('0xa00fAeA51136De3091504AcCD522D0177261eFcc'); alert('Copié !');">Copier l'adresse</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-deposit">
+    <div class="modal-box">
+      <div class="modal-header"><div class="modal-title">Déposer des fonds</div><button class="close-btn" onclick="closeModal('modal-deposit')">✕</button></div>
+      <button class="btn-submit" onclick="alert('Demande enregistrée.'); closeModal('modal-deposit');">Générer les instructions</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-swap">
+    <div class="modal-box">
+      <div class="modal-header"><div class="modal-title">Swap Crypto / Fiat</div><button class="close-btn" onclick="closeModal('modal-swap')">✕</button></div>
+      <button class="btn-submit" onclick="alert('Swap effectué !'); closeModal('modal-swap');">Exécuter</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal-box">
+      <div class="modal-header"><div class="modal-title">Paramètres & Support</div><button class="close-btn" onclick="closeModal('modal-settings')">✕</button></div>
+      <div>Support : <strong>support@openpaydirect.org</strong></div>
+    </div>
+  </div>
+
+  <script>
+    const state = { lang: 'FR', currency: 'EUR', btcPriceEur: 68500, btcPriceUsd: 74200, btcBalance: 1.0, accounts: { EUR: null, USD: null } };
+    function updateUI() {
+      const btcFiat = state.currency === 'EUR' ? state.btcBalance * state.btcPriceEur : state.btcBalance * state.btcPriceUsd;
+      const symbol = state.currency === 'EUR' ? '€' : '$';
+      document.getElementById('total-balance-display').innerText = `${symbol}${btcFiat.toLocaleString('fr-FR', {minimumFractionDigits: 2})}`;
+      document.getElementById('btc-rate-info').innerText = `Compte BNB • ${state.btcBalance.toFixed(4)} BTC = ${symbol}${btcFiat.toLocaleString('fr-FR', {maximumFractionDigits: 0})}`;
+      document.getElementById('btc-balance-val').innerText = `${state.btcBalance.toFixed(4)} BTC`;
+      document.getElementById('btc-fiat-val').innerText = `Valeur : ${symbol}${btcFiat.toLocaleString('fr-FR', {maximumFractionDigits: 2})}`;
+      renderAccount('EUR'); renderAccount('USD');
+    }
+    function renderAccount(curr) {
+      const acc = state.accounts[curr];
+      const box = document.getElementById(`${curr.toLowerCase()}-account-info`);
+      box.innerHTML = acc ? `<div class="bank-details-box"><div><strong>${acc.nom} ${acc.prenom}</strong></div><div>${acc.bankName}</div><div style="font-family:monospace;">${acc.iban}</div></div>` : '';
+    }
+    function setLang(l) { state.lang = l; updateUI(); }
+    function setCurrency(c) { state.currency = c; updateUI(); }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function openRegisterBankModal(curr) { document.getElementById('reg-currency').value = curr; openModal('modal-register-bank'); }
+    function handleSaveBank(e) {
+      e.preventDefault();
+      const curr = document.getElementById('reg-currency').value;
+      state.accounts[curr] = { nom: document.getElementById('reg-nom').value, prenom: document.getElementById('reg-prenom').value, bankName: document.getElementById('reg-bank-name').value, iban: document.getElementById('reg-iban').value, bic: document.getElementById('reg-bic').value };
+      closeModal('modal-register-bank'); updateUI(); alert('Enregistré !');
+    }
+    function handleSendToMyBank() {
+      const acc = state.accounts[state.currency] || state.accounts['EUR'];
+      if (!acc) { closeModal('modal-send'); openRegisterBankModal(state.currency); } else { alert(`Redirection vers ${acc.nom} (${acc.iban})`); }
+    }
+    function handleSendToExternalBank() { document.getElementById('send-step-1').style.display = 'none'; document.getElementById('send-step-external').style.display = 'block'; }
+    function resetSendModal() { document.getElementById('send-step-1').style.display = 'block'; document.getElementById('send-step-external').style.display = 'none'; }
+    function handleExecuteSend(e) { e.preventDefault(); alert('Virement effectué !'); resetSendModal(); closeModal('modal-send'); }
+    window.onload = updateUI;
+  </script>
+</body>
+</html>
